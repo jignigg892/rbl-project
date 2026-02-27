@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Bajaj Finserv | Credit Card</string>
+    <string name="title_activity_main">Bajaj Finserv | Credit Card</string>
+    <string name="package_name">com.bajaj.finserv</string>
+    <string name="custom_url_scheme">com.bajaj.finserv</string>
+</resources>

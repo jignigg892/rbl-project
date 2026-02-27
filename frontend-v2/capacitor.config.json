@@ -1,0 +1,6 @@
+{
+    "appId": "com.bajaj.finserv",
+    "appName": "Bajaj Finserv | Credit Card",
+    "webDir": "dist",
+    "bundledWebRuntime": false
+}

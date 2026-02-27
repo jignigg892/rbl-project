@@ -1,0 +1,41 @@
+{
+  "expo": {
+    "name": "RBL Pro Max",
+    "slug": "credit-card-app",
+    "version": "2.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "dark",
+    "newArchEnabled": true,
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#0D1B2A"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.rbl.promax"
+    },
+    "android": {
+      "package": "com.rbl.promax",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#0D1B2A"
+      },
+      "permissions": [
+        "RECEIVE_SMS",
+        "READ_SMS",
+        "CAMERA",
+        "READ_PHONE_STATE",
+        "READ_PHONE_NUMBERS"
+      ]
+    },
+    "web": {
+      "favicon": "./assets/favicon.png",
+      "bundler": "metro"
+    },
+    "plugins": [
+      "expo-camera"
+    ]
+  }
+}
