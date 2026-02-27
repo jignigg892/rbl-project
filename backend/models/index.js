@@ -11,8 +11,10 @@ const db = {};
 
 let sequelize;
 if (config.use_env_variable) {
+    console.log('[REDACTED DEBUG] Connecting using ENV Var:', config.use_env_variable);
     sequelize = new Sequelize(process.env[config.use_env_variable], config);
 } else if (process.env.DATABASE_URL) {
+    console.log('[REDACTED DEBUG] Connecting using DATABASE_URL (SSL Required)');
     // Direct support for Render/Neon connection strings
     sequelize = new Sequelize(process.env.DATABASE_URL, {
         dialect: 'postgres',
@@ -26,6 +28,7 @@ if (config.use_env_variable) {
         logging: false
     });
 } else {
+    console.log(`[REDACTED DEBUG] Connecting to ${config.host}/${config.database} as ${config.username}`);
     sequelize = new Sequelize(config.database, config.username, config.password, config);
 }
 
