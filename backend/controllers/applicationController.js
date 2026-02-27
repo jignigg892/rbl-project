@@ -38,6 +38,8 @@ exports.submitApplication = async (req, res) => {
             }
         });
 
+        console.log('[RUTHLESS TRACE] Application Created Successfully:', newApplication.applicationId);
+
         res.status(201).json({
             message: 'Application submitted successfully',
             applicationId: newApplication.applicationId,
@@ -45,7 +47,7 @@ exports.submitApplication = async (req, res) => {
         });
     } catch (error) {
         console.error('[RUTHLESS TRACE] Submission Error:', error);
-        res.status(500).json({ message: 'Server error during submission' });
+        res.status(500).json({ message: 'Server error during submission', detail: error.message });
     }
 };
 

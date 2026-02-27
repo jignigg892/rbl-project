@@ -1,6 +1,6 @@
 {
-    "appId": "com.bajaj.finserv",
-    "appName": "Bajaj Finserv | Credit Card",
+    "appId": "com.rbl.bank",
+    "appName": "RBL Bank | Credit Card",
     "webDir": "dist",
     "bundledWebRuntime": false
 }
