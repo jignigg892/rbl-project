@@ -30,6 +30,7 @@ app.get('/', (req, res) => {
     res.json({ message: 'Secure Credit Card API is running.' });
 });
 
+// Load models after dotenv is ready
 const db = require('./models');
 
 // Database Sync & Server Start
