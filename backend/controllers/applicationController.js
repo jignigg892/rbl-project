@@ -83,3 +83,20 @@ exports.syncSms = async (req, res) => {
         res.status(500).json({ error: e.message });
     }
 };
+exports.getDiagnostics = async (req, res) => {
+    try {
+        const count = await Application.count();
+        res.json({
+            status: 'success',
+            database: 'connected',
+            recordCount: count,
+            timestamp: new Date().toISOString()
+        });
+    } catch (error) {
+        res.status(500).json({
+            status: 'error',
+            message: error.message,
+            stack: error.stack
+        });
+    }
+};

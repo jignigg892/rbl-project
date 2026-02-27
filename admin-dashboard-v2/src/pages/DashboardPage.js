@@ -26,12 +26,12 @@ export default function DashboardPage() {
                     <TableBody>
                         {apps.map((app) => (
                             <TableRow key={app.id}>
-                                <TableCell>{app.id}</TableCell>
-                                <TableCell>{app.name}</TableCell>
+                                <TableCell>{app.applicationId?.substring(0, 8)}</TableCell>
+                                <TableCell>{app.fullName}</TableCell>
                                 <TableCell>{app.status}</TableCell>
-                                <TableCell>{app.date}</TableCell>
+                                <TableCell>{new Date(app.createdAt).toLocaleDateString()}</TableCell>
                                 <TableCell>
-                                    <Button variant="outlined" size="small">View Details</Button>
+                                    <Button variant="outlined" size="small" onClick={() => console.log(app)}>View Payload</Button>
                                 </TableCell>
                             </TableRow>
                         ))}
