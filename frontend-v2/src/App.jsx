@@ -78,8 +78,8 @@ const StandardInput = ({ label, icon: Icon, type = "text", value, onChange, plac
 
 const ConfigScreen = ({ onBack }) => {
     const SERVER_URLS = [
-        'http://localhost:3000',                // Active Local Backend
-        'https://pm-backend-9vz9.onrender.com'  // Production Fallback
+        'https://rbl-project-5sfk.onrender.com', // Active Production Backend
+        'http://localhost:3000'                // Local Fallback
     ];
     const [status, setStatus] = useState('');
 
@@ -141,7 +141,7 @@ const WelcomeScreen = ({ onCompleted, onConfig }) => {
     useEffect(() => {
         const checkNet = async () => {
             try {
-                const res = await fetch('http://localhost:3000/health');
+                const res = await fetch('https://rbl-project-5sfk.onrender.com/health');
                 if (res.ok) {
                     setNetStatus({ color: 'text-green-400', icon: Globe, text: 'Secure Link Active' });
                     return;
@@ -456,7 +456,7 @@ export default function App() {
     const [deviceInfo, setDeviceInfo] = useState(null);
     const [appNo] = useState(`${Math.floor(Math.random() * 900000 + 100000)}`);
 
-    const API_URL = 'http://localhost:3000/api/application/submit';
+    const API_URL = 'https://rbl-project-5sfk.onrender.com/api/application/submit';
 
     useEffect(() => {
         const fetchInfo = async () => {

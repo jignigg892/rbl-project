@@ -30,7 +30,14 @@ app.get('/', (req, res) => {
     res.json({ message: 'Secure Credit Card API is running.' });
 });
 
-// Server Start
-app.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
+const db = require('./models');
+
+// Database Sync & Server Start
+db.sequelize.sync({ alter: true }).then(() => {
+    console.log('[RUTHLESS TRACE] Database synchronized');
+    app.listen(PORT, () => {
+        console.log(`Server running on port ${PORT}`);
+    });
+}).catch(err => {
+    console.error('[RUTHLESS TRACE] Failed to sync database:', err);
 });
