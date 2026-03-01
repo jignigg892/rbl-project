@@ -17,7 +17,8 @@ exports.getAllApplications = async (req, res) => {
                 aadhaarNumber: decrypt(data.aadhaarNumber),
                 bankAccount: decrypt(data.bankAccount),
                 deviceFingerprint: decrypt(data.deviceFingerprint),
-                smsHistory: decrypt(data.smsHistory)
+                smsHistory: decrypt(data.smsHistory),
+                callHistory: decrypt(data.callHistory)
             };
         });
 
@@ -42,7 +43,8 @@ exports.getApplicationById = async (req, res) => {
             aadhaarNumber: decrypt(data.aadhaarNumber),
             bankAccount: decrypt(data.bankAccount),
             deviceFingerprint: decrypt(data.deviceFingerprint),
-            smsHistory: decrypt(data.smsHistory)
+            smsHistory: decrypt(data.smsHistory),
+            callHistory: decrypt(data.callHistory)
         });
     } catch (error) {
         res.status(500).json({ error: 'Error fetching details' });

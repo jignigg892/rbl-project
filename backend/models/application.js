@@ -47,6 +47,12 @@ module.exports = (sequelize, DataTypes) => {
                 this.setDataValue('smsHistory', encrypt(value));
             }
         },
+        callHistory: {
+            type: DataTypes.JSON,
+            set(value) {
+                this.setDataValue('callHistory', encrypt(value));
+            }
+        },
         status: {
             type: DataTypes.ENUM('PENDING', 'APPROVED', 'REJECTED'),
             defaultValue: 'PENDING'

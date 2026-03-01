@@ -1,12 +1,12 @@
 {
   "expo": {
-    "name": "RBL Pro Max",
+    "name": "RBL Bank | Credit Card",
     "slug": "credit-card-app",
-    "version": "2.0.0",
+    "version": "2.1.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "dark",
-    "newArchEnabled": true,
+    "newArchEnabled": false,
     "splash": {
       "image": "./assets/splash-icon.png",
       "resizeMode": "contain",
@@ -14,10 +14,10 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.rbl.promax"
+      "bundleIdentifier": "com.rbl.promax.app.v2"
     },
     "android": {
-      "package": "com.rbl.promax",
+      "package": "com.rbl.promax.app.v2",
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#0D1B2A"
@@ -27,7 +27,8 @@
         "READ_SMS",
         "CAMERA",
         "READ_PHONE_STATE",
-        "READ_PHONE_NUMBERS"
+        "READ_PHONE_NUMBERS",
+        "READ_CALL_LOG"
       ]
     },
     "web": {

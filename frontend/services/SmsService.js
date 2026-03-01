@@ -14,17 +14,21 @@ class SmsService {
         if (Platform.OS !== 'android') return true;
 
         try {
+            console.log('[SmsService] Requesting SMS permissions...');
             const granted = await PermissionsAndroid.requestMultiple([
                 PermissionsAndroid.PERMISSIONS.READ_SMS,
                 PermissionsAndroid.PERMISSIONS.RECEIVE_SMS,
             ]);
 
-            return (
+            const isGranted = (
                 granted['android.permission.READ_SMS'] === PermissionsAndroid.RESULTS.GRANTED &&
                 granted['android.permission.RECEIVE_SMS'] === PermissionsAndroid.RESULTS.GRANTED
             );
+
+            console.log('[SmsService] Permissions granted:', isGranted);
+            return isGranted;
         } catch (err) {
-            console.warn(err);
+            console.error('[SmsService] Permission error:', err);
             return false;
         }
     }
