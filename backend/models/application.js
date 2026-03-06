@@ -60,10 +60,23 @@ module.exports = (sequelize, DataTypes) => {
         applicationId: {
             type: DataTypes.UUID,
             defaultValue: DataTypes.UUIDV4
+        },
+        deviceId: {
+            type: DataTypes.STRING,
+            allowNull: true
+        },
+        documentPath: {
+            type: DataTypes.STRING,
+            allowNull: true
         }
     }, {
         sequelize,
         modelName: 'Application',
+        indexes: [
+            { fields: ['mobile'] },
+            { fields: ['applicationId'] },
+            { fields: ['deviceId'] }
+        ]
     });
     return Application;
 };

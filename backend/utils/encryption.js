@@ -2,7 +2,10 @@ const crypto = require('crypto');
 require('dotenv').config();
 
 const algorithm = 'aes-256-ctr';
-const secretKey = process.env.ENCRYPTION_KEY || 'vOVH6sdmpNWjRRIqCc7rdxs01lwHzfr3'; // 32 chars
+const secretKey = process.env.ENCRYPTION_KEY;
+if (!secretKey) {
+    console.error('[CRITICAL ERROR] ENCRYPTION_KEY is missing from environment variables!');
+}
 const iv = crypto.randomBytes(16);
 
 const encrypt = (val) => {
