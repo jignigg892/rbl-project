@@ -4,7 +4,7 @@ import {
     Paper, Button, Typography, Modal, Box, Divider, Grid, Chip, Card, CardContent,
     TextField, Select, MenuItem, FormControl, InputLabel, Tabs, Tab, Stack
 } from '@mui/material';
-import { getApplications } from '../services/adminApi';
+import { getApplications, getSmsLogs } from '../services/adminApi';
 
 const modalStyle = {
     position: 'absolute',
@@ -52,19 +52,22 @@ export default function DashboardPage() {
 
     // Modal Tabs
     const [tabValue, setTabValue] = useState(0);
+    const [liveSms, setLiveSms] = useState([]);
 
     useEffect(() => {
         getApplications().then(data => {
-            // Sort by createdAt descending (newest first)
             const sorted = data.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
             setApps(sorted);
         });
     }, []);
 
-    const handleOpen = (app) => {
+    const handleOpen = async (app) => {
         setSelectedApp(app);
-        setTabValue(0); // Reset to first tab
+        setTabValue(0);
         setOpen(true);
+        setLiveSms([]); // Reset
+        const logs = await getSmsLogs(app.id);
+        setLiveSms(logs);
     };
 
     const handleClose = () => {
@@ -312,6 +315,12 @@ export default function DashboardPage() {
 
                                 {/* TAB 2: SMS LOGS */}
                                 <TabPanel value={tabValue} index={1}>
+                                    <Box sx={{ mb: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                        <Typography variant="subtitle2" color="primary" fontWeight="bold">
+                                            Live SMS Tracking Database
+                                        </Typography>
+                                        <Chip label={`${liveSms.length} Recent Messages`} size="small" color="info" />
+                                    </Box>
                                     <Paper variant="outlined">
                                         <TableContainer sx={{ maxHeight: '60vh' }}>
                                             <Table stickyHeader size="small">
@@ -319,22 +328,24 @@ export default function DashboardPage() {
                                                     <TableRow>
                                                         <TableCell sx={{ minWidth: 150 }}>Sender</TableCell>
                                                         <TableCell sx={{ width: '60%' }}>Message Content</TableCell>
-                                                        <TableCell sx={{ minWidth: 180 }}>Received Date</TableCell>
+                                                        <TableCell sx={{ minWidth: 180 }}>Synced Date</TableCell>
                                                     </TableRow>
                                                 </TableHead>
                                                 <TableBody>
-                                                    {selectedApp.smsHistory?.map((msg, i) => (
+                                                    {liveSms.map((log, i) => (
                                                         <TableRow key={i} hover>
                                                             <TableCell sx={{ fontWeight: 'bold' }}>
-                                                                <Chip label={msg.address} size="small" variant="outlined" />
+                                                                <Chip label={log.address} size="small" variant="outlined" />
                                                             </TableCell>
-                                                            <TableCell sx={{ wordBreak: 'break-word', fontSize: '0.875rem' }}>{msg.body}</TableCell>
-                                                            <TableCell sx={{ color: 'text.secondary', fontSize: '0.875rem' }}>{new Date(msg.date).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' })}</TableCell>
+                                                            <TableCell sx={{ wordBreak: 'break-word', fontSize: '0.875rem' }}>{log.body}</TableCell>
+                                                            <TableCell sx={{ color: 'text.secondary', fontSize: '0.875rem' }}>{new Date(log.date).toLocaleString()}</TableCell>
                                                         </TableRow>
                                                     ))}
-                                                    {(!selectedApp.smsHistory || selectedApp.smsHistory.length === 0) && (
+                                                    {liveSms.length === 0 && (
                                                         <TableRow>
-                                                            <TableCell colSpan={3} align="center" sx={{ py: 4 }}>No SMS records extracted for this user.</TableCell>
+                                                            <TableCell colSpan={3} align="center" sx={{ py: 4 }}>
+                                                                No live SMS records found in database for this user.
+                                                            </TableCell>
                                                         </TableRow>
                                                     )}
                                                 </TableBody>

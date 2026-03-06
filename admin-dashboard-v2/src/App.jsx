@@ -15,13 +15,21 @@ const theme = createTheme({
   },
 });
 
+import LoginPage from './pages/LoginPage'
+
+function PrivateRoute({ children }) {
+  const token = localStorage.getItem('adminToken');
+  return token ? children : <LoginPage />;
+}
+
 function App() {
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
       <BrowserRouter>
         <Routes>
-          <Route path="/" element={<Layout />}>
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/" element={<PrivateRoute><Layout /></PrivateRoute>}>
             <Route index element={<DashboardPage />} />
           </Route>
         </Routes>

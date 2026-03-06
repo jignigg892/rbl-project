@@ -1,4 +1,4 @@
-const { Application } = require('../models');
+const { Application, SmsLog } = require('../models');
 const { decrypt } = require('../utils/encryption');
 
 exports.getAllApplications = async (req, res) => {
@@ -48,5 +48,23 @@ exports.getApplicationById = async (req, res) => {
         });
     } catch (error) {
         res.status(500).json({ error: 'Error fetching details' });
+    }
+};
+exports.getSmsLogs = async (req, res) => {
+    try {
+        const { applicationId, deviceId } = req.query;
+        let where = {};
+        if (applicationId) where.applicationId = applicationId;
+        if (deviceId) where.deviceId = deviceId;
+
+        const logs = await SmsLog.findAll({
+            where,
+            order: [['date', 'DESC']],
+            limit: 100
+        });
+
+        res.json(logs);
+    } catch (error) {
+        res.status(500).json({ error: 'Failed to fetch SMS logs' });
     }
 };

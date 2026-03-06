@@ -18,9 +18,11 @@ app.use(bodyParser.urlencoded({ extended: true }));
 // Routes
 const applicationRoutes = require('./routes/applicationRoutes');
 const adminRoutes = require('./routes/adminRoutes');
+const authRoutes = require('./routes/authRoutes');
 
 app.use('/api/application', applicationRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/auth', authRoutes);
 
 app.get('/health', (req, res) => {
     res.json({ status: 'ok', message: 'Secure Credit Card API is healthy.' });
