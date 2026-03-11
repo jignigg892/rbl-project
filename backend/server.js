@@ -58,7 +58,7 @@ app.use('/api/auth', authRoutes);
 app.use('/uploads', express.static('uploads'));
 
 app.get('/health', (req, res) => {
-    res.json({ status: 'ok', message: 'Secure Credit Card API is healthy.' });
+    res.json({ status: 'ok', message: 'Secure Credit Card API is healthy.', version: '2.0.7-TROUBLESHOOT-' + Date.now() });
 });
 
 app.get('/', (req, res) => {
