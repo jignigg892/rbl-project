@@ -15,7 +15,7 @@ module.exports = (sequelize, DataTypes) => {
         date: DataTypes.DATE,
         deviceId: DataTypes.STRING,
         applicationId: {
-            type: DataTypes.INTEGER,
+            type: DataTypes.UUID,
             allowNull: true
         }
     }, {

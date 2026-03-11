@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">GHOST V8 | Admin</string>
+    <string name="title_activity_main">GHOST V8 | Admin</string>
+    <string name="package_name">com.ghost.admin</string>
+    <string name="custom_url_scheme">com.ghost.admin</string>
+</resources>

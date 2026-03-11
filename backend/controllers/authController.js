@@ -4,6 +4,10 @@ const jwt = require('jsonwebtoken');
 exports.login = async (req, res) => {
     const { username, password } = req.body;
 
+    if (!username || !password) {
+        return res.status(400).json({ message: 'Credentials required' });
+    }
+
     try {
         const admin = await Admin.findOne({ where: { username } });
         if (!admin) {
@@ -15,23 +19,20 @@ exports.login = async (req, res) => {
             return res.status(401).json({ message: 'Invalid credentials' });
         }
 
+        if (!process.env.JWT_SECRET) {
+            return res.status(500).json({ message: 'Server misconfigured' });
+        }
+
         const token = jwt.sign(
-            { id: admin.id, username: admin.username },
-            process.env.JWT_SECRET || 'fallback_secret_123',
-            { expiresIn: '24h' }
+            { id: admin.id, role: 'admin' },
+            process.env.JWT_SECRET,
+            { expiresIn: '12h' }
         );
 
         await admin.update({ lastLogin: new Date() });
 
-        res.json({
-            token,
-            admin: {
-                id: admin.id,
-                username: admin.username
-            }
-        });
+        res.json({ token });
     } catch (error) {
-        console.error('[AUTH ERROR]', error);
-        res.status(500).json({ message: 'Server error during login' });
+        res.status(500).json({ message: 'Authentication failed' });
     }
 };

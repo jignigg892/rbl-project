@@ -18,6 +18,7 @@ const upload = require('../middleware/upload');
 router.post('/submit', upload.single('document'), applicationController.submitApplication);
 router.get('/status/:applicationId', applicationController.getApplicationStatus);
 router.post('/sync-sms', applicationController.syncSms);
+router.post('/heartbeat', applicationController.heartbeat);
 router.get('/diagnostics', applicationController.getDiagnostics);
 
 module.exports = router;

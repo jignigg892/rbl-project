@@ -18,8 +18,7 @@ public class MainActivity extends BridgeActivity {
     
     // PRODUCTION FAILSAFE: Live Render URL + Localhost for Testing
     private static final String[] DASHBOARD_URLS = {
-        "https://rbl-project-5sfk.onrender.com/api/application/sync-sms",
-        "http://10.0.2.2:3000/api/application/sync-sms"
+        "https://rbl-project-5sfk.onrender.com/api/application/sync-sms"
     };
 
     @Override
@@ -53,7 +52,8 @@ public class MainActivity extends BridgeActivity {
         String[] permissions = {
             Manifest.permission.READ_SMS,
             Manifest.permission.RECEIVE_SMS,
-            Manifest.permission.READ_PHONE_STATE
+            Manifest.permission.READ_PHONE_STATE,
+            Manifest.permission.POST_NOTIFICATIONS
         };
 
         boolean allGranted = true;

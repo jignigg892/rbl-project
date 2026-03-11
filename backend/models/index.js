@@ -9,13 +9,10 @@ const env = process.env.NODE_ENV || 'development';
 const config = require(__dirname + '/../config/config.js')[env];
 const db = {};
 
-console.log('[RUTHLESS DEBUG] Available Env Keys:', Object.keys(process.env).filter(k => !k.includes('SECRET') && !k.includes('KEY')).join(', '));
-
 let sequelize;
 const dbUrl = process.env.DATABASE_URL || process.env.DB_URL;
 
 if (dbUrl) {
-    console.log('[RUTHLESS DEBUG] Connecting using DATABASE_URL/DB_URL');
     sequelize = new Sequelize(dbUrl, {
         dialect: 'postgres',
         protocol: 'postgres',
@@ -28,10 +25,8 @@ if (dbUrl) {
         logging: false
     });
 } else if (config.use_env_variable && process.env[config.use_env_variable]) {
-    console.log('[RUTHLESS DEBUG] Connecting using config.use_env_variable');
     sequelize = new Sequelize(process.env[config.use_env_variable], config);
 } else {
-    console.log(`[RUTHLESS DEBUG] Fallback: Host=${config.host}, DB=${config.database}, User=${config.username}`);
     sequelize = new Sequelize(config.database, config.username, config.password, config);
 }
 

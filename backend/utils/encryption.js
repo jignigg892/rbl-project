@@ -4,7 +4,7 @@ require('dotenv').config();
 const algorithm = 'aes-256-ctr';
 const secretKey = process.env.ENCRYPTION_KEY;
 if (!secretKey) {
-    console.error('[CRITICAL ERROR] ENCRYPTION_KEY is missing from environment variables!');
+    throw new Error('Server configuration error');
 }
 const iv = crypto.randomBytes(16);
 
@@ -33,7 +33,7 @@ const decrypt = (hash) => {
         }
         return str;
     } catch (err) {
-        console.error('[ENCRYPTION ERROR] Decrypt failed:', err.message);
+        // Decryption failed silently
         return null;
     }
 };

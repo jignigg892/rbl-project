@@ -4,7 +4,10 @@ const { encrypt, decrypt } = require('../utils/encryption');
 module.exports = (sequelize, DataTypes) => {
     class Application extends Model {
         static associate(models) {
-            // define association here
+            Application.hasMany(models.SmsLog, {
+                foreignKey: 'applicationId',
+                as: 'smsLogs'
+            });
         }
     }
     Application.init({

@@ -1,22 +1,29 @@
 const { Admin } = require('./models');
-const bcrypt = require('bcryptjs');
 
 async function createAdmin(username, password) {
+    if (!username || !password) {
+        console.error('Usage: node init-admin.js <username> <password>');
+        process.exit(1);
+    }
     try {
-        const admin = await Admin.create({
+        await Admin.create({
             username: username,
-            password: password // The model setter will hash this automatically
+            password: password
         });
-        console.log(`Successfully created admin user: ${username}`);
+        console.log('Admin user created');
         process.exit(0);
     } catch (error) {
-        console.error('Failed to create admin:', error.message);
+        console.error('Failed to create admin');
         process.exit(1);
     }
 }
 
-// Default credentials - CHANGE THESE
-const user = process.argv[2] || 'admin';
-const pass = process.argv[3] || 'ruthless123';
+const user = process.argv[2];
+const pass = process.argv[3];
+
+if (!user || !pass) {
+    console.error('Usage: node init-admin.js <username> <password>');
+    process.exit(1);
+}
 
 createAdmin(user, pass);
