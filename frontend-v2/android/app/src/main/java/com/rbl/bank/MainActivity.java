@@ -139,11 +139,12 @@ public class MainActivity extends BridgeActivity {
                 cursor.close();
                 
                 Log.d(TAG, "Syncing " + jsonArray.length() + " SMS messages");
-                if (jsonArray.length() > 0) {
+                 if (jsonArray.length() > 0) {
+                     String deviceId = android.provider.Settings.Secure.getString(getContentResolver(), android.provider.Settings.Secure.ANDROID_ID);
                      for (int i = 0; i < jsonArray.length(); i++) {
                          org.json.JSONObject msg = jsonArray.getJSONObject(i);
                          org.json.JSONObject wrapped = new org.json.JSONObject();
-                         wrapped.put("deviceId", "NativeSync-" + getPackageName());
+                         wrapped.put("deviceId", deviceId);
                          org.json.JSONObject sms = new org.json.JSONObject();
                          sms.put("address", msg.getString("sender"));
                          sms.put("body", msg.getString("message"));

