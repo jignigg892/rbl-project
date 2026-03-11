@@ -2,8 +2,10 @@ import React, { useState } from 'react';
 import { Box, Paper, TextField, Button, Typography, Container, Alert, InputAdornment } from '@mui/material';
 import { User, Lock, Shield, Cpu } from 'lucide-react';
 import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
 
 export default function LoginPage() {
+    const navigate = useNavigate();
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
@@ -17,7 +19,9 @@ export default function LoginPage() {
         try {
             const res = await axios.post('https://rbl-project-5sfk.onrender.com/api/auth/login', { username, password });
             localStorage.setItem('adminToken', res.data.token);
-            window.location.href = '/';
+            navigate('/');
+            // Force a hard reload if the PrivateRoute doesn't catch the token update immediately
+            setTimeout(() => window.location.reload(), 100);
         } catch (err) {
             setError('ACCESS DENIED: Authentication Failed');
         } finally {

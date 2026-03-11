@@ -149,7 +149,7 @@ export default function DashboardPage() {
                 setIsRefreshing(false);
             }
         }
-    }, [apps.length, isRefreshing]); // apps.length triggers skeleton on first fetch
+    }, [apps.length]); // apps.length triggers skeleton on first fetch, removed isRefreshing to prevent loop
 
     useEffect(() => {
         mountedRef.current = true;
@@ -159,7 +159,7 @@ export default function DashboardPage() {
             mountedRef.current = false;
             clearInterval(interval);
         };
-    }, [refreshData]);
+    }, []); // Empty dependency array prevents the interval from restarting on every fetch
 
     // ─── Deduplicated & Sorted ───
     const processedApps = useMemo(() => {
