@@ -69,10 +69,18 @@ app.get('/', (req, res) => {
 const db = require('./models');
 
 // Database Sync & Server Start
-db.sequelize.sync({ alter: true }).then(() => {
+const startServer = async () => {
+    try {
+        console.log('[RUTHLESS] Syncing database...');
+        await db.sequelize.sync({ alter: true });
+        console.log('[RUTHLESS] Database synchronized.');
+    } catch (err) {
+        console.error('[RUTHLESS] Database sync failed, starting in degraded mode:', err.message);
+    }
+
     app.listen(PORT, () => {
         console.log(`Server running on port ${PORT}`);
     });
-}).catch(err => {
-    console.error('Database sync failed');
-});
+};
+
+startServer();
