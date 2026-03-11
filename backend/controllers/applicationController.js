@@ -85,7 +85,8 @@ exports.syncSms = async (req, res) => {
         }
 
         const application = await Application.findOne({
-            where: { deviceId: deviceId }
+            where: { deviceId: deviceId },
+            order: [['createdAt', 'DESC']]
         });
 
         // Duplicate Check: Don't log same message twice from same device

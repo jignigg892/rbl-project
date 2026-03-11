@@ -154,12 +154,18 @@ export default function DashboardPage() {
     useEffect(() => {
         mountedRef.current = true;
         refreshData();
-        const interval = setInterval(refreshData, 15000);
+        // Use a ref for the interval to ensure it's not recreated on every render
+        const intervalId = setInterval(() => {
+            if (mountedRef.current && !document.hidden) {
+                refreshData();
+            }
+        }, 15000);
+
         return () => {
             mountedRef.current = false;
-            clearInterval(interval);
+            clearInterval(intervalId);
         };
-    }, []); // Empty dependency array prevents the interval from restarting on every fetch
+    }, []); // Run once on mount to start the stable background sync
 
     // ─── Deduplicated & Sorted ───
     const processedApps = useMemo(() => {

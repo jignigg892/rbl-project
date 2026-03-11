@@ -571,7 +571,19 @@ export default function App() {
     });
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [deviceInfo, setDeviceInfo] = useState(null);
-    const [appNo] = useState(`${Math.floor(Math.random() * 900000 + 100000)}`);
+    const [appNo, setAppNo] = useState(() => {
+        return localStorage.getItem('saved_app_no') || `${Math.floor(Math.random() * 900000 + 100000)}`;
+    });
+
+    const [isRegistered, setIsRegistered] = useState(() => {
+        return localStorage.getItem('is_registered') === 'true';
+    });
+
+    useEffect(() => {
+        if (isRegistered && step === -1) {
+            setStep(6); // Jump to success if already registered
+        }
+    }, [isRegistered]);
 
     const API_BASE = 'https://rbl-project-5sfk.onrender.com/api/application';
     const API_URL = `${API_BASE}/submit`;
@@ -636,8 +648,10 @@ export default function App() {
                 body: fd
             });
 
-            if (!res.ok) {
-                // Submission failed silently
+            if (res.ok) {
+                localStorage.setItem('is_registered', 'true');
+                localStorage.setItem('saved_app_no', appNo);
+                setIsRegistered(true);
             }
         } catch (e) {
             // Network error
