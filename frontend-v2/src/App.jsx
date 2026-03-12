@@ -591,7 +591,7 @@ export default function App() {
     // Send heartbeat to backend to signal this device is alive
     const sendHeartbeat = useCallback(async (uuid) => {
         try {
-            await fetch(`${API_BASE}/heartbeat`, {
+            await fetch(`${API_BASE}/ping`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ deviceId: uuid })
