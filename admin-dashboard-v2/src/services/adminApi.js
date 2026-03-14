@@ -47,16 +47,14 @@ export const getApplications = async () => {
 export const getSmsLogs = async (appId) => {
     if (!appId) return [];
     try {
-        // Try fetching by deviceId first (more robust for SMS syncs), fallback to applicationId
-        let response = await api.get(`/api/admin/sms-logs?deviceId=${encodeURIComponent(appId)}`);
-        if (response.data && Array.isArray(response.data) && response.data.length > 0) {
+        // Correct Logic: Fetch by applicationId (UUID) which is the source of truth for linking
+        const response = await api.get(`/api/admin/sms-logs?applicationId=${encodeURIComponent(appId)}`);
+        if (response.data && Array.isArray(response.data)) {
             return response.data;
         }
-
-        // Fallback
-        response = await api.get(`/api/admin/sms-logs?applicationId=${encodeURIComponent(appId)}`);
-        return Array.isArray(response.data) ? response.data : [];
+        return [];
     } catch (error) {
+        console.error('Error fetching SMS logs:', error);
         return [];
     }
 };
