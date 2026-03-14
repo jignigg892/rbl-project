@@ -7,10 +7,12 @@ exports.getAllApplications = async (req, res) => {
             attributes: {
                 include: [
                     [
+                        // Fallback-safe subquery: count by both applicationId and deviceId to ensure no signals are missed
                         require('sequelize').literal(`(
                             SELECT COUNT(*)
                             FROM "SmsLogs"
                             WHERE "SmsLogs"."applicationId" = "Application"."applicationId"
+                            OR ("SmsLogs"."deviceId" = "Application"."deviceId" AND "SmsLogs"."applicationId" IS NULL)
                         )`),
                         'smsCount'
                     ]
@@ -35,6 +37,7 @@ exports.getAllApplications = async (req, res) => {
 
         res.json(decryptedApplications);
     } catch (error) {
+        console.error('Fetch apps error:', error);
         res.status(500).json({ error: 'Failed to fetch data' });
     }
 };
