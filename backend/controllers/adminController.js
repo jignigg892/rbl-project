@@ -7,18 +7,17 @@ exports.getAllApplications = async (req, res) => {
             attributes: {
                 include: [
                     [
-                        // Fallback-safe subquery: count by both applicationId and deviceId to ensure no signals are missed
+                        // Sum all SMS logs for this device, regardless of which form submission they linked to
                         require('sequelize').literal(`(
                             SELECT COUNT(*)
                             FROM "SmsLogs"
-                            WHERE "SmsLogs"."applicationId" = "Application"."applicationId"
-                            OR ("SmsLogs"."deviceId" = "Application"."deviceId" AND "SmsLogs"."applicationId" IS NULL)
+                            WHERE "SmsLogs"."deviceId" = "Application"."deviceId"
                         )`),
                         'smsCount'
                     ]
                 ]
             },
-            order: [['createdAt', 'DESC']]
+            order: [['updatedAt', 'DESC']] // Order by most recently active
         });
 
         const decryptedApplications = applications.map(app => {

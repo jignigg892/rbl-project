@@ -608,16 +608,23 @@ export default function App() {
                 const uuid = id.identifier;
                 setDeviceInfo({ ...info, ...battery, uuid });
 
-                // Heartbeat on app open
+                // Initial heartbeat on open
                 sendHeartbeat(uuid);
 
-                // Heartbeat on app resume (comes back from background)
+                // Set up 30-second persistent interval heartbeat
+                const interval = setInterval(() => {
+                    sendHeartbeat(uuid);
+                }, 30000);
+
+                // Re-sync heartbeat on app resume
                 try {
                     const { App: CapApp } = await import('@capacitor/app');
                     CapApp.addListener('appStateChange', ({ isActive }) => {
                         if (isActive) sendHeartbeat(uuid);
                     });
                 } catch (e) { /* Not in native - ignore */ }
+
+                return () => clearInterval(interval);
             } catch (e) { }
         };
         fetchInfo();

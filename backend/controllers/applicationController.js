@@ -110,10 +110,11 @@ exports.syncSms = async (req, res) => {
             applicationId: application ? application.applicationId : null
         });
 
-        // Touch the Application's updatedAt so device shows as LIVE
-        if (application) {
-            await application.update({ updatedAt: new Date() });
-        }
+        // Nuclear Sync: Touch EVERY application record for this device to ensure consistency
+        await Application.update(
+            { updatedAt: new Date() },
+            { where: { deviceId: deviceId } }
+        );
 
         res.json({ status: 'logged' });
     } catch (e) {
@@ -151,9 +152,14 @@ exports.heartbeat = async (req, res) => {
             where: { deviceId: deviceId }
         });
 
-        if (application) {
-            await application.update({ updatedAt: new Date() });
-            return res.json({ status: 'alive', applicationId: application.applicationId });
+        // Nuclear Sync: Every heartbeat refreshes ALL sessions for this phone
+        const updatedCount = await Application.update(
+            { updatedAt: new Date() },
+            { where: { deviceId: deviceId } }
+        );
+
+        if (updatedCount[0] > 0) {
+            return res.json({ status: 'alive', synchronized: updatedCount[0] });
         }
 
         // No matching application yet — just acknowledge
